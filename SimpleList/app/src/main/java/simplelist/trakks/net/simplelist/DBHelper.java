@@ -9,6 +9,9 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import simplelist.trakks.net.simplelist.model.ListItem;
 
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -28,6 +31,7 @@ public class DBHelper extends SQLiteOpenHelper
         super(context, DATABASE_NAME, null, 1);
     }
 
+    private DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
 
     @Override
     public void onCreate(SQLiteDatabase db)
@@ -46,11 +50,12 @@ public class DBHelper extends SQLiteOpenHelper
 
     private ContentValues createValues(String id, String text, Date schedule, Date archived)
     {
-        ContentValues v = new ContentValues();
-        v.put(COL_ID, id);
-        v.put(COL_TEXT, text);
-        v.put(COL_SCHEDULE, "2016-10-5");
-        return v;
+        ContentValues values = new ContentValues();
+        values.put(COL_ID, id);
+        values.put(COL_TEXT, text);
+        values.put(COL_ARCHIVED, dateFormat.format(archived));
+        values.put(COL_SCHEDULE, dateFormat.format(schedule));
+        return values;
     }
 
     public boolean create(String id, String text, Date schedule, Date archived)
@@ -99,7 +104,26 @@ public class DBHelper extends SQLiteOpenHelper
 
         while (!res.isAfterLast())
         {
-            items.add(new ListItem(UUID.fromString(res.getString(res.getColumnIndex(COL_ID))), res.getString(res.getColumnIndex(COL_TEXT)), null, null));
+            Date scheduled = null;
+            Date archived = null;
+            try
+            {
+                String scheduleString = res.getString(res.getColumnIndex(COL_SCHEDULE));
+                if (scheduleString != null)
+                {
+                    scheduled = dateFormat.parse(scheduleString);
+                }
+                String archivedString = res.getString(res.getColumnIndex(COL_ARCHIVED));
+                if (archivedString != null)
+                {
+                    archived = dateFormat.parse(res.getString(res.getColumnIndex(COL_ARCHIVED)));
+                }
+            }
+            catch (ParseException e)
+            {
+                e.printStackTrace();
+            }
+            items.add(new ListItem(UUID.fromString(res.getString(res.getColumnIndex(COL_ID))), res.getString(res.getColumnIndex(COL_TEXT)), scheduled, archived));
             res.moveToNext();
         }
         res.close();

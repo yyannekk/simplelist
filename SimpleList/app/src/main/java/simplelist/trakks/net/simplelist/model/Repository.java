@@ -26,16 +26,19 @@ public class Repository
         return item.getId();
     }
 
-    public void update(ListItem item){
-        if(item.getId()==null)throw new IllegalArgumentException("Item has no id");
-        db.update(item.getId().toString(),item.getText(),item.getScheduled(),item.getArchived());
+    public void update(ListItem item)
+    {
+        if (item.getId() == null) throw new IllegalArgumentException("Item has no id");
+        db.update(item.getId().toString(), item.getText(), item.getScheduled(), item.getArchived());
     }
 
-    public void delete(UUID id){
+    public void delete(UUID id)
+    {
         db.delete(id.toString());
     }
 
-    public List<ListItem> getAll(){
+    public List<ListItem> getAll()
+    {
         return db.getAll();
     }
 }

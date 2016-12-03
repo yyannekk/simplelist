@@ -1,6 +1,7 @@
 package simplelist.trakks.net.simplelist;
 
 import android.content.Context;
+import android.graphics.Paint;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -26,21 +27,13 @@ public class MyListAdapter extends BaseAdapter
     @Override
     public int getCount()
     {
-        return items.size() + 1;
+        return items.size();
     }
 
     @Override
     public Object getItem(int i)
     {
-        if (i == items.size())
-        {
-            return new ListItem();
-        }
-        else
-        {
-            return items.get(i);
-        }
-
+        return items.get(i);
     }
 
     @Override
@@ -49,41 +42,38 @@ public class MyListAdapter extends BaseAdapter
         return i;
     }
 
-    private boolean isNewPosition(int i)
-    {
-        System.out.println("test " + i + " == " + (getCount()-1));
-        return i == getCount() - 1;
-    }
-
     @Override
     public View getView(int i, View view, ViewGroup viewGroup)
     {
+        System.out.println("update view " + view);
         View v = view;
-
+        ListItem p = (ListItem) getItem(i);
         if (v == null)
         {
             LayoutInflater vi = LayoutInflater.from(context);
-            System.out.println("is new position " + i + "?:" + isNewPosition(i));
-            if (isNewPosition(i))
-            {
-                System.out.println("inflate add_row...");
-                v = vi.inflate(R.layout.listitem_add_row, null);
-            }
-            else
-            {
-                v = vi.inflate(R.layout.listitem_row, null);
-            }
+            v = vi.inflate(R.layout.listitem_row, null);
 
-        }
 
-        ListItem p = (ListItem) getItem(i);
-
-        if (p != null)
-        {
-            if (!isNewPosition(i))
+            if (p != null)
             {
                 TextView text = (TextView) v.findViewById(R.id.textTextView);
                 text.setText(p.getText());
+                System.out.println("cross out?" + (p.getArchived() != null));
+                if (p.getArchived() != null)
+                {
+                    text.setPaintFlags(text.getPaintFlags() | Paint.STRIKE_THRU_TEXT_FLAG);
+                }
+            }
+        }
+        else
+        {
+            if (p != null)
+            {
+                if (p.getArchived() != null)
+                {
+                    TextView text = (TextView) v.findViewById(R.id.textTextView);
+                    text.setPaintFlags(text.getPaintFlags() | Paint.STRIKE_THRU_TEXT_FLAG);
+                }
             }
         }
 
