@@ -53,8 +53,10 @@ public class DBHelper extends SQLiteOpenHelper
         ContentValues values = new ContentValues();
         values.put(COL_ID, id);
         values.put(COL_TEXT, text);
-        values.put(COL_ARCHIVED, dateFormat.format(archived));
-        values.put(COL_SCHEDULE, dateFormat.format(schedule));
+        if (archived != null)
+            values.put(COL_ARCHIVED, dateFormat.format(archived));
+        if (schedule != null)
+            values.put(COL_SCHEDULE, dateFormat.format(schedule));
         return values;
     }
 

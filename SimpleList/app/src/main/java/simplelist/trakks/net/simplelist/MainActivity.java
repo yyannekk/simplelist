@@ -1,23 +1,28 @@
 package simplelist.trakks.net.simplelist;
 
+import android.app.DatePickerDialog;
 import android.content.Context;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.Toolbar;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
-import android.widget.AdapterView;
-import android.widget.Button;
-import android.widget.EditText;
-import android.widget.ListView;
+import android.widget.*;
 import simplelist.trakks.net.simplelist.model.ListItem;
 import simplelist.trakks.net.simplelist.model.Repository;
 
 import java.util.Calendar;
+import java.util.LinkedList;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity
 {
     private EditText itemText;
+    private Repository repo;
+    private MyListAdapter adapter;
+    private List<ListItem> dataItems;
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -25,21 +30,15 @@ public class MainActivity extends AppCompatActivity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        
+        setSupportActionBar((Toolbar) findViewById(R.id.toolbar));
 
-        final Repository repo = new Repository(this);
-//        for (ListItem item : repo.getAll())
-//        {
-//            repo.delete(item.getId());
-//        }
+        repo = new Repository(this);
 
         final ListView listView = (ListView) findViewById(R.id.itemListView);
 
 
-        final List<ListItem> items = repo.getAll();
-//        items.add(new ListItem(UUID.randomUUID(),"sampleitem",null,null));
-//        items.add(new ListItem(UUID.randomUUID(),"sampleitem",null,null));
-        final MyListAdapter adapter = new MyListAdapter(this, items);
+        dataItems = repo.getAll();
+        adapter = new MyListAdapter(this, dataItems);
         listView.setAdapter(adapter);
 
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener()
@@ -51,7 +50,6 @@ public class MainActivity extends AppCompatActivity
                 item.setArchived(Calendar.getInstance().getTime());
                 repo.update(item);
                 adapter.notifyDataSetChanged();
-                //listView.invalidateViews();
             }
         });
 
@@ -63,37 +61,114 @@ public class MainActivity extends AppCompatActivity
             @Override
             public void onFocusChange(View view, boolean hasFocus)
             {
-                System.out.println("focus changed");
-                System.out.println(view);
-                System.out.println(hasFocus);
-                if(view.getId() == R.id.addItemText && !hasFocus) {
-
-                    InputMethodManager imm =  (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+                if (view.getId() == R.id.addItemText && !hasFocus)
+                {
+                    InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
                     imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
-
                 }
             }
         });
+
+        final ListItem listItem = new ListItem();
 
         btn.setOnClickListener(new View.OnClickListener()
         {
             @Override
             public void onClick(View view)
             {
-                ListItem li = new ListItem();
-                li.setText(itemText.getText().toString());
+                //should be in editText changed....
+                listItem.setText(itemText.getText().toString());
+
+                ListItem item = listItem.clone();
+
+                listItem.setText("");
+                listItem.setArchived(null);
+                listItem.setScheduled(null);
+
                 itemText.setText("");
                 itemText.clearFocus();
 
-                System.out.println("clear..");
-                InputMethodManager imm =  (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+                InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
                 imm.hideSoftInputFromWindow(itemText.getWindowToken(), 0);
 
-                repo.insert(li);
-                items.add(li);
-                adapter.notifyDataSetChanged();
+                insert(item);
+                refreshList();
+            }
+        });
+
+        Button schedButton = (Button)findViewById(R.id.scheduleButton);
+
+        final Calendar calendar = Calendar.getInstance();
+
+        final Context context = this;
+        final DatePickerDialog.OnDateSetListener date = new DatePickerDialog.OnDateSetListener() {
+
+            @Override
+            public void onDateSet(DatePicker view, int year, int monthOfYear,
+                                  int dayOfMonth) {
+                calendar.set(Calendar.YEAR, year);
+                calendar.set(Calendar.MONTH, monthOfYear);
+                calendar.set(Calendar.DAY_OF_MONTH, dayOfMonth);
+
+                listItem.setScheduled(calendar.getTime());
+//                updateLabel();
+            }
+        };
+
+        schedButton.setOnClickListener(new View.OnClickListener(){
+
+            @Override
+            public void onClick(View view)
+            {
+                // TODO Auto-generated method stub
+                new DatePickerDialog(context,date, calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH),
+                        calendar.get(Calendar.DAY_OF_MONTH)).show();
             }
         });
     }
 
+    private void insert(ListItem item)
+    {
+        repo.insert(item);
+        dataItems.add(item);
+    }
+
+    private void removeAll(List<ListItem> items)
+    {
+        dataItems.removeAll(items);
+        for (ListItem listItem : items)
+        {
+            repo.delete(listItem.getId());
+        }
+    }
+
+    public void onRemoveArchivedClicked(MenuItem mi)
+    {
+        System.out.println("remove archived");
+        List<ListItem> toDelete = new LinkedList<>();
+        for (ListItem dataItem : dataItems)
+        {
+            if (dataItem.getArchived() != null)
+            {
+                System.out.println(dataItem);
+                toDelete.add(dataItem);
+            }
+        }
+
+        removeAll(toDelete);
+        refreshList();
+    }
+
+    private void refreshList()
+    {
+        adapter.notifyDataSetChanged();
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu)
+    {
+        // Inflate the menu_main; this adds dataItems to the action bar if it is present.
+        getMenuInflater().inflate(R.menu.menu_main, menu);
+        return true;
+    }
 }

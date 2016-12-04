@@ -65,4 +65,12 @@ public class ListItem
         this.archived = archived;
     }
 
+    public ListItem clone()
+    {
+        Date scheduled = this.scheduled != null ? (Date) this.scheduled.clone() : null;
+        Date archived = this.archived != null ? (Date) this.archived.clone() : null;
+        UUID id = this.id != null ? UUID.fromString(this.id.toString()) : null;
+        return new ListItem(id, new String(text), scheduled, archived);
+    }
+
 }

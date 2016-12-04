@@ -9,6 +9,8 @@ import android.widget.BaseAdapter;
 import android.widget.TextView;
 import simplelist.trakks.net.simplelist.model.ListItem;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.List;
 
 
@@ -45,7 +47,6 @@ public class MyListAdapter extends BaseAdapter
     @Override
     public View getView(int i, View view, ViewGroup viewGroup)
     {
-        System.out.println("update view " + view);
         View v = view;
         ListItem p = (ListItem) getItem(i);
         if (v == null)
@@ -53,20 +54,24 @@ public class MyListAdapter extends BaseAdapter
             LayoutInflater vi = LayoutInflater.from(context);
             v = vi.inflate(R.layout.listitem_row, null);
 
-
             if (p != null)
             {
                 TextView text = (TextView) v.findViewById(R.id.textTextView);
                 text.setText(p.getText());
-                System.out.println("cross out?" + (p.getArchived() != null));
                 if (p.getArchived() != null)
                 {
                     text.setPaintFlags(text.getPaintFlags() | Paint.STRIKE_THRU_TEXT_FLAG);
+                }
+                if(p.getScheduled()!=null){
+                    TextView scheduledText = (TextView) v.findViewById(R.id.scheduledTextView);
+                    DateFormat format = new SimpleDateFormat("dd/MM ");
+                    scheduledText.setText(format.format(p.getScheduled().getTime()));
                 }
             }
         }
         else
         {
+            //TODO refactor
             if (p != null)
             {
                 if (p.getArchived() != null)
