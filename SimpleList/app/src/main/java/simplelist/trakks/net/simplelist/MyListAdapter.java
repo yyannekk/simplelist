@@ -7,10 +7,14 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.TextView;
+import org.joda.time.DateTime;
+import org.joda.time.Duration;
+import org.joda.time.LocalDate;
+import org.joda.time.LocalTime;
+import org.joda.time.format.DateTimeFormat;
+import org.joda.time.format.DateTimeFormatter;
 import simplelist.trakks.net.simplelist.model.ListItem;
 
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.util.List;
 
 
@@ -62,10 +66,11 @@ public class MyListAdapter extends BaseAdapter
                 {
                     text.setPaintFlags(text.getPaintFlags() | Paint.STRIKE_THRU_TEXT_FLAG);
                 }
-                if(p.getScheduled()!=null){
+                if (p.getScheduled() != null)
+                {
                     TextView scheduledText = (TextView) v.findViewById(R.id.scheduledTextView);
-                    DateFormat format = new SimpleDateFormat("dd/MM ");
-                    scheduledText.setText(format.format(p.getScheduled().getTime()));
+//                    DateFormat format = new SimpleDateFormat("dd/MM ");
+                    scheduledText.setText(formatSchedule(p.getScheduled()));
                 }
             }
         }
@@ -83,5 +88,38 @@ public class MyListAdapter extends BaseAdapter
         }
 
         return v;
+    }
+
+    private String formatSchedule(LocalDate schedule)
+    {
+        DateTime sched = schedule.toDateTime(new LocalTime());
+        DateTime now = DateTime.now();
+        Duration duration = new Duration(now, sched);
+        System.out.println("sched: " + sched);
+        System.out.println("now:   " + now);
+        System.out.println("duration: " + duration);
+        System.out.println("days: " + duration.getStandardDays());
+
+        DateTimeFormatter fmt = DateTimeFormat.forPattern("d MMMM");
+
+        switch ((int) duration.getStandardDays())
+        {
+            case -1:
+                return "yesterday";
+            case 0:
+                return "today";
+            case 1:
+                return "tomorrow";
+            case 2:
+            case 3:
+            case 4:
+            case 5:
+            case 6:
+                return schedule.dayOfWeek().getAsText();
+            default:
+                return schedule.toString(fmt);
+        }
+
+
     }
 }

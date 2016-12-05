@@ -7,6 +7,7 @@ import android.database.Cursor;
 import android.database.DatabaseUtils;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import org.joda.time.LocalDate;
 import simplelist.trakks.net.simplelist.model.ListItem;
 
 import java.text.DateFormat;
@@ -48,19 +49,19 @@ public class DBHelper extends SQLiteOpenHelper
         onCreate(db);
     }
 
-    private ContentValues createValues(String id, String text, Date schedule, Date archived)
+    private ContentValues createValues(String id, String text, LocalDate schedule, LocalDate archived)
     {
         ContentValues values = new ContentValues();
         values.put(COL_ID, id);
         values.put(COL_TEXT, text);
         if (archived != null)
-            values.put(COL_ARCHIVED, dateFormat.format(archived));
+            values.put(COL_ARCHIVED, dateFormat.format(archived.toDate()));
         if (schedule != null)
-            values.put(COL_SCHEDULE, dateFormat.format(schedule));
+            values.put(COL_SCHEDULE, dateFormat.format(schedule.toDate()));
         return values;
     }
 
-    public boolean create(String id, String text, Date schedule, Date archived)
+    public boolean create(String id, String text, LocalDate schedule, LocalDate archived)
     {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues v = createValues(id, text, schedule, archived);
@@ -81,7 +82,7 @@ public class DBHelper extends SQLiteOpenHelper
         return DatabaseUtils.queryNumEntries(db, TABLE_ITEMS);
     }
 
-    public boolean update(String id, String text, Date schedule, Date archived)
+    public boolean update(String id, String text, LocalDate schedule, LocalDate archived)
     {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues v = createValues(id, text, schedule, archived);
@@ -106,19 +107,19 @@ public class DBHelper extends SQLiteOpenHelper
 
         while (!res.isAfterLast())
         {
-            Date scheduled = null;
-            Date archived = null;
+            LocalDate scheduled = null;
+            LocalDate archived = null;
             try
             {
                 String scheduleString = res.getString(res.getColumnIndex(COL_SCHEDULE));
                 if (scheduleString != null)
                 {
-                    scheduled = dateFormat.parse(scheduleString);
+                    scheduled = new LocalDate(dateFormat.parse(scheduleString));
                 }
                 String archivedString = res.getString(res.getColumnIndex(COL_ARCHIVED));
                 if (archivedString != null)
                 {
-                    archived = dateFormat.parse(res.getString(res.getColumnIndex(COL_ARCHIVED)));
+                    archived = new LocalDate(dateFormat.parse(res.getString(res.getColumnIndex(COL_ARCHIVED))));
                 }
             }
             catch (ParseException e)

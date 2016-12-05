@@ -10,6 +10,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.*;
+import org.joda.time.LocalDate;
 import simplelist.trakks.net.simplelist.model.ListItem;
 import simplelist.trakks.net.simplelist.model.Repository;
 
@@ -47,7 +48,7 @@ public class MainActivity extends AppCompatActivity
             public void onItemClick(AdapterView<?> adapterView, View view, int i, long l)
             {
                 ListItem item = (ListItem) adapter.getItem(i);
-                item.setArchived(Calendar.getInstance().getTime());
+                item.setArchived(LocalDate.now());
                 repo.update(item);
                 adapter.notifyDataSetChanged();
             }
@@ -96,33 +97,44 @@ public class MainActivity extends AppCompatActivity
             }
         });
 
-        Button schedButton = (Button)findViewById(R.id.scheduleButton);
+        Button schedButton = (Button) findViewById(R.id.scheduleButton);
 
         final Calendar calendar = Calendar.getInstance();
 
         final Context context = this;
-        final DatePickerDialog.OnDateSetListener date = new DatePickerDialog.OnDateSetListener() {
+        final DatePickerDialog.OnDateSetListener date = new DatePickerDialog.OnDateSetListener()
+        {
 
             @Override
             public void onDateSet(DatePicker view, int year, int monthOfYear,
-                                  int dayOfMonth) {
+                                  int dayOfMonth)
+            {
                 calendar.set(Calendar.YEAR, year);
                 calendar.set(Calendar.MONTH, monthOfYear);
                 calendar.set(Calendar.DAY_OF_MONTH, dayOfMonth);
 
-                listItem.setScheduled(calendar.getTime());
+                LocalDate date = LocalDate.now().plusDays(1);
+                String nameOfDay = date.dayOfWeek().getAsText();
+                LocalDate scheduled = new LocalDate(year,monthOfYear+1,dayOfMonth);
+                System.out.println(scheduled);
+
+                listItem.setScheduled(scheduled);
 //                updateLabel();
             }
         };
 
-        schedButton.setOnClickListener(new View.OnClickListener(){
+        schedButton.setOnClickListener(new View.OnClickListener()
+        {
 
             @Override
             public void onClick(View view)
             {
                 // TODO Auto-generated method stub
-                new DatePickerDialog(context,date, calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH),
-                        calendar.get(Calendar.DAY_OF_MONTH)).show();
+                LocalDate now = LocalDate.now();
+//                System.out.println(String.format("jdk  year=%d, month=%d, day=%d",calendar.get(Calendar.YEAR),calendar.get(Calendar.MONTH),calendar.get(Calendar.DAY_OF_MONTH)));
+//                System.out.println(String.format("joda year=%d, month=%d, day=%d",now.getYear(),now.getMonthOfYear(),now.getDayOfMonth()));
+                new DatePickerDialog(context, date, now.getYear(), now.getMonthOfYear()-1,
+                        now.getDayOfMonth() + 1).show();
             }
         });
     }
