@@ -4,7 +4,7 @@
     <item
             android:onClick="onRemoveArchivedClicked"
             android:id="@+id/miCompose"
-            app:showAsAction="ifRoom"
+            app:showAsAction="never"
             android:title="remove archived">
     </item>
 </menu>

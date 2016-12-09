@@ -1,6 +1,7 @@
 package simplelist.trakks.net.simplelist;
 
 import android.content.Context;
+import android.graphics.Color;
 import android.graphics.Paint;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -48,6 +49,8 @@ public class MyListAdapter extends BaseAdapter
         return i;
     }
 
+    private int defaultPaintFlag = -1;
+
     @Override
     public View getView(int i, View view, ViewGroup viewGroup)
     {
@@ -57,32 +60,42 @@ public class MyListAdapter extends BaseAdapter
         {
             LayoutInflater vi = LayoutInflater.from(context);
             v = vi.inflate(R.layout.listitem_row, null);
-
-            if (p != null)
-            {
-                TextView text = (TextView) v.findViewById(R.id.textTextView);
-                text.setText(p.getText());
-                if (p.getArchived() != null)
-                {
-                    text.setPaintFlags(text.getPaintFlags() | Paint.STRIKE_THRU_TEXT_FLAG);
-                }
-                if (p.getScheduled() != null)
-                {
-                    TextView scheduledText = (TextView) v.findViewById(R.id.scheduledTextView);
-//                    DateFormat format = new SimpleDateFormat("dd/MM ");
-                    scheduledText.setText(formatSchedule(p.getScheduled()));
-                }
-            }
         }
-        else
+
+        if (p != null)
         {
-            //TODO refactor
-            if (p != null)
+            TextView text = (TextView) v.findViewById(R.id.textTextView);
+            text.setText(p.getText());
+            if (p.getArchived() != null)
             {
-                if (p.getArchived() != null)
+                if (defaultPaintFlag == -1) defaultPaintFlag = text.getPaintFlags();
+                text.setPaintFlags(defaultPaintFlag | Paint.STRIKE_THRU_TEXT_FLAG);
+            }
+            else
+            {
+                if (defaultPaintFlag != -1)
+                    text.setPaintFlags(defaultPaintFlag);
+            }
+            if (p.getScheduled() != null)
+            {
+                TextView scheduledText = (TextView) v.findViewById(R.id.scheduledTextView);
+                String scheduleFormatted = formatSchedule(p.getScheduled());
+
+                scheduledText.setText(scheduleFormatted);
+                switch (scheduleFormatted)
                 {
-                    TextView text = (TextView) v.findViewById(R.id.textTextView);
-                    text.setPaintFlags(text.getPaintFlags() | Paint.STRIKE_THRU_TEXT_FLAG);
+                    case TODAY:
+                        scheduledText.setTextColor(Color.BLUE);
+                        break;
+                    case TOMORROW:
+                        scheduledText.setTextColor(Color.BLACK);
+                        break;
+                    case YESTERDAY:
+                        scheduledText.setTextColor(Color.LTGRAY);
+                        break;
+                    default:
+                        scheduledText.setTextColor(Color.GRAY);
+                        break;
                 }
             }
         }
@@ -90,36 +103,34 @@ public class MyListAdapter extends BaseAdapter
         return v;
     }
 
+    private static final String TODAY = "today";
+    private static final String YESTERDAY = "yesterday";
+    private static final String TOMORROW = "tomorrow";
+
     private String formatSchedule(LocalDate schedule)
     {
         DateTime sched = schedule.toDateTime(new LocalTime());
         DateTime now = DateTime.now();
         Duration duration = new Duration(now, sched);
-        System.out.println("sched: " + sched);
-        System.out.println("now:   " + now);
-        System.out.println("duration: " + duration);
-        System.out.println("days: " + duration.getStandardDays());
 
         DateTimeFormatter fmt = DateTimeFormat.forPattern("d MMMM");
-
-        switch ((int) duration.getStandardDays())
+        int days = (int) duration.getStandardDays();
+        switch (days)
         {
             case -1:
-                return "yesterday";
+                return YESTERDAY;
             case 0:
-                return "today";
+                return TODAY;
             case 1:
-                return "tomorrow";
-            case 2:
-            case 3:
-            case 4:
-            case 5:
-            case 6:
-                return schedule.dayOfWeek().getAsText();
-            default:
-                return schedule.toString(fmt);
+                return TOMORROW;
         }
-
-
+        if (days >= 2 && days < 7)
+        {
+            return schedule.dayOfWeek().getAsText() + " next week";
+        }
+        //if (days >= 7 && days < 14)
+        {
+            return schedule.dayOfWeek().getAsText() + " " + schedule.toString(fmt);
+        }
     }
 }

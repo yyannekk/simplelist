@@ -73,4 +73,11 @@ public class ListItem
         return new ListItem(id, new String(text), scheduled, archived);
     }
 
+    public void clear()
+    {
+        this.setText("");
+        this.setArchived(null);
+        this.setScheduled(null);
+        this.setId(null);
+    }
 }

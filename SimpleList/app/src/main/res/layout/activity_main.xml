@@ -5,7 +5,7 @@
         android:id="@+id/activity_main"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-
+        android:background="@color/gray"
         tools:context="simplelist.trakks.net.simplelist.MainActivity"
         android:layout_alignParentBottom="true"
         android:fitsSystemWindows="true"
@@ -17,7 +17,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             app:titleTextColor="@android:color/white"
-            android:titleTextColor="@android:color/white"
+            android:titleTextColor="@color/white"
             android:background="?attr/colorPrimary">
     </android.support.v7.widget.Toolbar>
 
@@ -35,25 +35,46 @@
             android:layout_width="match_parent"
     />
 
+    <LinearLayout
+            android:gravity="right"
+            android:id="@+id/scheduleBar"
+            android:visibility="gone"
+            android:layout_above="@+id/footer"
+            android:layout_width="match_parent" android:layout_height="wrap_content">
+
+        <Button android:id="@+id/scheduleTomorrowButton" android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="tomorrow"
+        />
+
+        <Button android:id="@+id/scheduleNextWeekButton" android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="next week"
+        />
+
+        <Button android:id="@+id/scheduleButton" android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="sched"
+        />
+
+    </LinearLayout>
+
     <RelativeLayout android:id="@+id/footer"
                     android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:layout_margin="10dp"
                     android:layout_alignParentBottom="true"
     >
 
         <EditText android:id="@+id/addItemText" android:layout_width="match_parent" android:layout_height="wrap_content"
                   android:layout_weight="1"
                   android:layout_marginRight="1dp"
-                  android:layout_toLeftOf="@+id/scheduleButton"
+                  android:layout_toLeftOf="@+id/addItemButton"
                   android:imeOptions="actionDone"
                   android:hint="add item"
         />
 
-        <Button android:id="@+id/scheduleButton" android:layout_width="wrap_content" android:layout_height="wrap_content"
-                android:text="sched"
-                android:layout_toLeftOf="@+id/addItemButton"
-        />
-
         <Button android:id="@+id/addItemButton" android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:visibility="gone"
                 android:layout_alignParentRight="true" android:text="add"
         />
 

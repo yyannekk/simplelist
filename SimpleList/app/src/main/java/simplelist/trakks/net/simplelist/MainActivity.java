@@ -8,13 +8,13 @@ import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.*;
 import org.joda.time.LocalDate;
 import simplelist.trakks.net.simplelist.model.ListItem;
 import simplelist.trakks.net.simplelist.model.Repository;
 
-import java.util.Calendar;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -24,10 +24,30 @@ public class MainActivity extends AppCompatActivity
     private Repository repo;
     private MyListAdapter adapter;
     private List<ListItem> dataItems;
+    private ListView listView;
+
+    private Button addItemButton;
+    private ViewGroup scheduleBar;
+
+    private void hideItemActions()
+    {
+        scheduleBar.setVisibility(View.GONE);
+        addItemButton.setVisibility(View.GONE);
+    }
+
+    private void showItemActions()
+    {
+        scheduleBar.setVisibility(View.VISIBLE);
+        addItemButton.setVisibility(View.VISIBLE);
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
     {
+        final Context context = this;
+
+        final ListItem listItem = new ListItem();
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
@@ -35,8 +55,60 @@ public class MainActivity extends AppCompatActivity
 
         repo = new Repository(this);
 
-        final ListView listView = (ListView) findViewById(R.id.itemListView);
+        listView = (ListView) findViewById(R.id.itemListView);
 
+        scheduleBar = (ViewGroup) findViewById(R.id.scheduleBar);
+
+        final DatePickerDialog.OnDateSetListener date = new DatePickerDialog.OnDateSetListener()
+        {
+
+            @Override
+            public void onDateSet(DatePicker view, int year, int monthOfYear,
+                                  int dayOfMonth)
+            {
+                LocalDate scheduled = new LocalDate(year, monthOfYear + 1, dayOfMonth);
+                listItem.setScheduled(scheduled);
+            }
+        };
+
+        Button scheduleButton = (Button) findViewById(R.id.scheduleButton);
+        Button scheduleNextWeek = (Button) findViewById(R.id.scheduleNextWeekButton);
+        Button scheduleNextDay = (Button) findViewById(R.id.scheduleTomorrowButton);
+
+        scheduleButton.setOnClickListener(new View.OnClickListener()
+        {
+            @Override
+            public void onClick(View view)
+            {
+                LocalDate now = LocalDate.now();
+                new DatePickerDialog(context, date, now.getYear(), now.getMonthOfYear() - 1,
+                        now.getDayOfMonth() + 1).show();
+            }
+        });
+
+        scheduleNextDay.setOnClickListener(new View.OnClickListener()
+        {
+            @Override
+            public void onClick(View view)
+            {
+                LocalDate now = LocalDate.now();
+                listItem.setScheduled(now.plusDays(1));
+            }
+        });
+
+        scheduleNextWeek.setOnClickListener(new View.OnClickListener()
+        {
+            @Override
+            public void onClick(View view)
+            {
+                LocalDate now = LocalDate.now();
+                LocalDate nextFriday = now.plusWeeks(1).dayOfWeek().setCopy(5);
+                listItem.setScheduled(nextFriday);
+            }
+        });
+
+
+        addItemButton = (Button) findViewById(R.id.addItemButton);
 
         dataItems = repo.getAll();
         adapter = new MyListAdapter(this, dataItems);
@@ -55,24 +127,31 @@ public class MainActivity extends AppCompatActivity
         });
 
         itemText = (EditText) findViewById(R.id.addItemText);
-        Button btn = (Button) findViewById(R.id.addItemButton);
+
 
         itemText.setOnFocusChangeListener(new View.OnFocusChangeListener()
         {
             @Override
             public void onFocusChange(View view, boolean hasFocus)
             {
-                if (view.getId() == R.id.addItemText && !hasFocus)
+                if (view.getId() == R.id.addItemText)
                 {
-                    InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
-                    imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
+                    if (!hasFocus)
+                    {
+                        InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+                        imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
+
+                        hideItemActions();
+                    }
+                    else
+                    {
+                        showItemActions();
+                    }
                 }
             }
         });
 
-        final ListItem listItem = new ListItem();
-
-        btn.setOnClickListener(new View.OnClickListener()
+        addItemButton.setOnClickListener(new View.OnClickListener()
         {
             @Override
             public void onClick(View view)
@@ -80,11 +159,9 @@ public class MainActivity extends AppCompatActivity
                 //should be in editText changed....
                 listItem.setText(itemText.getText().toString());
 
-                ListItem item = listItem.clone();
+                addItemUnderConstruction(listItem.clone());
 
-                listItem.setText("");
-                listItem.setArchived(null);
-                listItem.setScheduled(null);
+                listItem.clear();
 
                 itemText.setText("");
                 itemText.clearFocus();
@@ -92,51 +169,14 @@ public class MainActivity extends AppCompatActivity
                 InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
                 imm.hideSoftInputFromWindow(itemText.getWindowToken(), 0);
 
-                insert(item);
                 refreshList();
             }
         });
+    }
 
-        Button schedButton = (Button) findViewById(R.id.scheduleButton);
-
-        final Calendar calendar = Calendar.getInstance();
-
-        final Context context = this;
-        final DatePickerDialog.OnDateSetListener date = new DatePickerDialog.OnDateSetListener()
-        {
-
-            @Override
-            public void onDateSet(DatePicker view, int year, int monthOfYear,
-                                  int dayOfMonth)
-            {
-                calendar.set(Calendar.YEAR, year);
-                calendar.set(Calendar.MONTH, monthOfYear);
-                calendar.set(Calendar.DAY_OF_MONTH, dayOfMonth);
-
-                LocalDate date = LocalDate.now().plusDays(1);
-                String nameOfDay = date.dayOfWeek().getAsText();
-                LocalDate scheduled = new LocalDate(year,monthOfYear+1,dayOfMonth);
-                System.out.println(scheduled);
-
-                listItem.setScheduled(scheduled);
-//                updateLabel();
-            }
-        };
-
-        schedButton.setOnClickListener(new View.OnClickListener()
-        {
-
-            @Override
-            public void onClick(View view)
-            {
-                // TODO Auto-generated method stub
-                LocalDate now = LocalDate.now();
-//                System.out.println(String.format("jdk  year=%d, month=%d, day=%d",calendar.get(Calendar.YEAR),calendar.get(Calendar.MONTH),calendar.get(Calendar.DAY_OF_MONTH)));
-//                System.out.println(String.format("joda year=%d, month=%d, day=%d",now.getYear(),now.getMonthOfYear(),now.getDayOfMonth()));
-                new DatePickerDialog(context, date, now.getYear(), now.getMonthOfYear()-1,
-                        now.getDayOfMonth() + 1).show();
-            }
-        });
+    private void addItemUnderConstruction(ListItem item)
+    {
+        insert(item);
     }
 
     private void insert(ListItem item)
@@ -156,18 +196,17 @@ public class MainActivity extends AppCompatActivity
 
     public void onRemoveArchivedClicked(MenuItem mi)
     {
-        System.out.println("remove archived");
         List<ListItem> toDelete = new LinkedList<>();
         for (ListItem dataItem : dataItems)
         {
             if (dataItem.getArchived() != null)
             {
-                System.out.println(dataItem);
                 toDelete.add(dataItem);
             }
         }
 
         removeAll(toDelete);
+        listView.invalidateViews();
         refreshList();
     }
 
@@ -179,7 +218,6 @@ public class MainActivity extends AppCompatActivity
     @Override
     public boolean onCreateOptionsMenu(Menu menu)
     {
-        // Inflate the menu_main; this adds dataItems to the action bar if it is present.
         getMenuInflater().inflate(R.menu.menu_main, menu);
         return true;
     }
